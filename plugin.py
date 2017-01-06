@@ -83,7 +83,7 @@ class Trackers(callbacks.Plugin):
 		outStr = webQuery.prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
 
 		for i in range(0, len(outStr)):
-			irc.reply(outStr[i])
+			irc.reply(outStr[i], prefixNick=False)
 
 	btn = wrap(btnStatus, [optional("something")])
 
@@ -109,7 +109,7 @@ class Trackers(callbacks.Plugin):
 		outStr = webQuery.prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
 
 		for i in range(0, len(outStr)):
-			irc.reply(outStr[i])
+			irc.reply(outStr[i], prefixNick=False)
 
 	pth = wrap(pthStatus, [optional("something")])
 
@@ -146,7 +146,7 @@ class Trackers(callbacks.Plugin):
 		outStr = webQuery.prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
 
 		for i in range(0, len(outStr)):
-			irc.reply(outStr[i])
+			irc.reply(outStr[i], prefixNick=False)
 
 	ptp = wrap(ptpStatus, [optional("something")])
 

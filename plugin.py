@@ -8,36 +8,14 @@ import supybot.plugins as plugins
 from supybot.commands import *
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
-import urllib2
-import json
-import sys
+import requests
 
 class WebParser():
 	"""Contains functions for getting and parsing web data"""
 
 	def getWebData(self,url):
-		# create handler
-		redirectionHandler = urllib2.HTTPRedirectHandler() 
-
-		# apply the handler to an opener
-		opener = urllib2.build_opener(redirectionHandler)
-
-		# install the openers
-		urllib2.install_opener(opener)    
-
-		# Get JSON data
-		# Fake headers to get around blocking requests from bots
-		headers = {}
-		headers['User-Agent'] = "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17"
-		request = urllib2.Request(url, headers=headers)
-#		try:
-		response = urllib2.urlopen(request)
-		respData = response.read()
-		content = json.loads(respData.decode('utf-8'))
-#		except:
-#			irc.reply("Error: couldn't connect to site.")
-#			return
-		return content
+       		content = requests.get(url)
+        	return content.json()
 
 	def prepareStatusString(self,site_name,status,status_headers,breakpoints,line_headers):
 		# Specify look and feel

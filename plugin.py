@@ -14,8 +14,9 @@ class WebParser():
 	"""Contains functions for getting and parsing web data"""
 
 	def getWebData(self,url):
-       		content = requests.get(url)
-        	return content.json()
+		headers = {'User-Agent': "Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17"}
+		content = requests.get(url, headers=headers)
+		return content.json()
 
 	def prepareStatusString(self,site_name,status,status_headers,breakpoints,line_headers):
 		# Specify look and feel

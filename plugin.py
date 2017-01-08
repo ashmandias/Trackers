@@ -129,7 +129,10 @@ class Trackers(callbacks.Plugin):
 			status = ([content["Website"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]])
 			for IP in content["TrackerHTTPAddresses"]:
 				status += ([content["TrackerHTTPAddresses"][IP]])
-			status += ([content["IRCPersona"], content["IRCPalme"], content["IRCSaraband"]])
+			#status += ([content["IRCPersona"], content["IRCPalme"], content["IRCSaraband"]])
+			for key, value in content.iteritems():
+				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
+					status += ([value])
 			status_headers = ([site_name+" Site","IRC Announce","IRC ID","Image Host"])
 			for IP in content["TrackerHTTPAddresses"]:
 				status_headers += ([IP.encode('utf-8')])

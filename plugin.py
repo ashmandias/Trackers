@@ -12,6 +12,7 @@ import supybot.callbacks as callbacks
 import requests
 import json
 import sys
+import re
 
 class WebParser():
 	"""Contains functions for getting and parsing web data"""
@@ -118,23 +119,26 @@ class Trackers(callbacks.Plugin):
 		site_name = "PTP"
 
 		content = WebParser().getWebData(irc,url)
-	
+
 		if all != "all":
 			status = [content["Website"], content["TrackerHTTP"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]]
 			status_headers = [site_name+" Site","Tracker","IRC","IRC Announce","IRC ID","Image Host"]
 			breakpoints = [0]	
 			line_headers = [""]	
 		else:
-			status = ([content["Website"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"], 
-				     content["TrackerHTTPAddresses"]["51.255.35.82"],
-				     content["TrackerHTTPAddresses"]["164.132.54.181"],content["TrackerHTTPAddresses"]["164.132.54.182"],content["TrackerHTTPAddresses"]["192.99.58.220"],
-				     content["IRCPersona"], content["IRCPalme"], content["IRCSaraband"]])
-			status_headers = ([site_name+" Site","IRC Announce","IRC ID","Image Host",
-							 "51.255.35.82","164.132.54.181","164.132.54.182","192.99.58.220",
-							 "Persona","Palme","Saraband"])
+			status = ([content["Website"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]])
+			for IP in content["TrackerHTTPAddresses"]:
+				status += ([content["TrackerHTTPAddresses"][IP]])
+			status += ([content["IRCPersona"], content["IRCPalme"], content["IRCSaraband"]])
+			status_headers = ([site_name+" Site","IRC Announce","IRC ID","Image Host"])
+			for IP in content["TrackerHTTPAddresses"]:
+				status_headers += ([IP.encode('utf-8')])
+			for key, value in content.iteritems():
+				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
+					status_headers += ([key[3:].encode('utf-8')])
 			breakpoints = [4,8]
 			line_headers = ["Services: ", "Trackers: ", "IRC: "]
-
+	
 		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
 
 		for i in range(0, len(outStr)):

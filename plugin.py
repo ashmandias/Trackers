@@ -46,40 +46,48 @@ class WebParser():
 			breakpoints = [0]	
 			line_headers = [""]	
 		else:
+			line_headers = ["Services: "]
 			status = ([content["Website"]])
-			status_headers = [site_name+" Site"]
-		
+			status_headers = [site_name.upper() +" Site"]
+
+			breakpoints = [1]
 			try:
 				status += [content["IRCTorrentAnnouncer"]]
 				status_headers += ["IRC Announce"]
+				breakpoints[0] += 1
 			except:
 				pass
 			try:
 				status += [content["IRCUserIdentifier"]]
 				status_headers += ["IRC ID"]
+				breakpoints[0] += 1
 			except:
 				pass
 			try:
 				status += [content["ImageHost"]]
 				status_headers += ["Image Host"]
+				breakpoints[0] += 1
 			except:
 				pass
-			line_headers = ["Services: "]
 			line_headers += ["Trackers: "]
 			try:
 				for IP in content["TrackerHTTPAddresses"]:
 					status += ([content["TrackerHTTPAddresses"][IP]])
 					status_headers += ([IP.encode('utf-8')])
+					breakpoints[1] += 1
 			except:
 				pass
 			try:
 				status += ([content["TrackerHTTP"]])
 				status_headers += (["Tracker (HTTP)"])
+				breakpoints[2] += 1
 			except:
 				pass
 			try:
 				status += ([content["TrackerHTTPS"]])
 				status_headers += (["Tracker (HTTPS)"])
+				#breakpoints[2]++
+				breakpoints[2] += 1
 			except:
 				pass
 			try:
@@ -90,12 +98,12 @@ class WebParser():
 				line_headers += [ "IRC: "]
 			except:
 				pass
-			breakpoints = [4,8]
+			#breakpoints = [4,8]
 	
 		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
 	
 		for i in range(0, len(outStr)):
-			irc.reply(outStr[i])
+			irc.reply(outStr[i], prefixNick=False)
 
 	def getWebData(self, irc, url):
 		headers = {'User-Agent' : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'}

@@ -17,6 +17,86 @@ import re
 class WebParser():
 	"""Contains functions for getting and parsing web data"""
 
+	def _getStatus(self, irc, site, site_name, all):
+		"""
+		"""
+		site_name = site
+		url = "https://" + site + ".trackerstatus.info/api/status/"
+
+		content = WebParser().getWebData(irc,url)
+
+		if all != "all":
+			status = [content["Website"], content["TrackerHTTP"], content["IRC"]]
+			status_headers = [site_name+" Site","Tracker","IRC"]
+			try:
+				status += [content["IRCTorrentAnnouncer"]]
+				status_headers += ["IRC Announce"]
+			except:
+				pass
+			try:
+				status += [content["IRCUserIdentifier"]]
+				status_headers += ["IRC ID"]
+			except:
+				pass
+			try:
+				status += [content["ImageHost"]]
+				status_headers += ["Image Host"]
+			except:
+				pass
+			breakpoints = [0]	
+			line_headers = [""]	
+		else:
+			status = ([content["Website"]])
+			status_headers = [site_name+" Site"]
+		
+			try:
+				status += [content["IRCTorrentAnnouncer"]]
+				status_headers += ["IRC Announce"]
+			except:
+				pass
+			try:
+				status += [content["IRCUserIdentifier"]]
+				status_headers += ["IRC ID"]
+			except:
+				pass
+			try:
+				status += [content["ImageHost"]]
+				status_headers += ["Image Host"]
+			except:
+				pass
+			line_headers = ["Services: "]
+			line_headers += ["Trackers: "]
+			try:
+				for IP in content["TrackerHTTPAddresses"]:
+					status += ([content["TrackerHTTPAddresses"][IP]])
+					status_headers += ([IP.encode('utf-8')])
+			except:
+				pass
+			try:
+				status += ([content["TrackerHTTP"]])
+				status_headers += (["Tracker (HTTP)"])
+			except:
+				pass
+			try:
+				status += ([content["TrackerHTTPS"]])
+				status_headers += (["Tracker (HTTPS)"])
+			except:
+				pass
+			try:
+				for key, value in content.iteritems():
+					if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
+						status += ([value])
+						status_headers += ([key[3:].encode('utf-8')])
+				line_headers += [ "IRC: "]
+			except:
+				pass
+			breakpoints = [4,8]
+	
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
+	
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+
 	def getWebData(self, irc, url):
 		headers = {'User-Agent' : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'}
 		try:
@@ -50,6 +130,8 @@ class WebParser():
 			elif count != len(status):
 				outStr[line] = outStr[line]+chr(15)+" | "                  
 		return outStr
+
+
 
 class Trackers(callbacks.Plugin):
 	"""Contains commands for checking server status of various trackers."""
@@ -129,7 +211,6 @@ class Trackers(callbacks.Plugin):
 			status = ([content["Website"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]])
 			for IP in content["TrackerHTTPAddresses"]:
 				status += ([content["TrackerHTTPAddresses"][IP]])
-			#status += ([content["IRCPersona"], content["IRCPalme"], content["IRCSaraband"]])
 			for key, value in content.iteritems():
 				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
 					status += ([value])
@@ -169,6 +250,52 @@ class Trackers(callbacks.Plugin):
 			irc.reply(outStr[i])
 
 	ggn = wrap(ggnStatus, [optional("something")])
+
+	def ggnStatusTest(self, irc, msg, args, all):
+		"""
+		Check the status of PTP site, tracker, and irc.
+		"""
+		site_name = "GGn"
+		site = "ggn"
+
+		WebParser()._getStatus(irc, site, site_name, all)
+
+	ggntest = wrap(ggnStatusTest, [optional("something")])
+
+	def ptpStatusTest(self, irc, msg, args, all):
+		"""
+		Check the status of PTP site, tracker, and irc.
+		"""
+		site_name = "PTP"
+		site = "ptp"
+
+		WebParser()._getStatus(irc, site, site_name, all)
+
+	ptptest = wrap(ptpStatusTest, [optional("something")])
+
+	def btnStatusTest(self, irc, msg, args, all):
+		"""
+		Check the status of PTP site, tracker, and irc.
+		"""
+		site_name = "BTN"
+		site = "btn"
+
+		WebParser()._getStatus(irc, site, site_name, all)
+
+	btntest = wrap(btnStatusTest, [optional("something")])
+
+	def pthStatusTest(self, irc, msg, args, all):
+		"""
+		Check the status of PTP site, tracker, and irc.
+		"""
+		site_name = "PTH"
+		site = "pth"
+
+		WebParser()._getStatus(irc, site, site_name, all)
+
+	pthtest = wrap(pthStatusTest, [optional("something")])
+		
+		
 
 Class = Trackers
 

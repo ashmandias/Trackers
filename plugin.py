@@ -87,17 +87,20 @@ class WebParser():
 					status_headers += ["Tracker (" + protocol + ")"]
 					breakpoints[line] += 1
 					line_headers[line] = "Trackers: "
+				line_headers[line] = "Trackers: "
 
-			line += 1
-			line_headers += [""]
-			breakpoints = breakpoints + ([""])
-			breakpoints[line] = breakpoints[line - 1]
+#			print(WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers))
 
 			for key, value in content.iteritems():
 				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
 					status += ([value])
 					status_headers += ([key[3:].encode('utf-8')])
-					line_headers[line] =  "IRC Servers: "
+					if not line_headers[line] ==  "IRC Servers: ":
+						line += 1
+						line_headers += [""]
+						breakpoints = breakpoints + ([""])
+						breakpoints[line] = breakpoints[line - 1]
+						line_headers[line] =  "IRC Servers: "
 					breakpoints[line] += 1
 
 			line += 1

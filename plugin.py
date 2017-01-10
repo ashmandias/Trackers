@@ -74,25 +74,6 @@ class WebParser():
 			breakpoints = breakpoints + ([""])
 			breakpoints[line] = breakpoints[line - 1]
 
-			for announcer in announcers:
-				if announcer in content:
-					status += [content[announcer]]
-					status_headers += ["IRC Announce"]
-					breakpoints[line] += 1
-					line_headers[line] = "IRC Services: "
-
-			for IRCID in IRCIDs:
-				if IRCID in content:
-					status += [content[IRCID]]
-					status_headers += ["IRC ID"]
-					breakpoints[line] += 1
-					line_headers[line] = "IRC Services: "
-
-			line += 1
-			line_headers += [""]
-			breakpoints = breakpoints + ([""])
-			breakpoints[line] = breakpoints[line - 1]
-
 			if "TrackerHTTPAddresses" in content:
 				for IP in content["TrackerHTTPAddresses"]:
 					status += ([content["TrackerHTTPAddresses"][IP]])
@@ -109,11 +90,35 @@ class WebParser():
 
 			line += 1
 			line_headers += [""]
+			breakpoints = breakpoints + ([""])
+			breakpoints[line] = breakpoints[line - 1]
+
 			for key, value in content.iteritems():
 				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
 					status += ([value])
 					status_headers += ([key[3:].encode('utf-8')])
 					line_headers[line] =  "IRC Servers: "
+					breakpoints[line] += 1
+
+			line += 1
+			line_headers += [""]
+			breakpoints = breakpoints + ([""])
+			breakpoints[line] = breakpoints[line - 1]
+
+			for announcer in announcers:
+				if announcer in content:
+					status += [content[announcer]]
+					status_headers += ["IRC Announce"]
+					breakpoints[line] += 1
+					line_headers[line] = "IRC Services: "
+
+			for IRCID in IRCIDs:
+				if IRCID in content:
+					status += [content[IRCID]]
+					status_headers += ["IRC ID"]
+					breakpoints[line] += 1
+					line_headers[line] = "IRC Services: "
+
 
 		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
 	

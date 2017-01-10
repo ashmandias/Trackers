@@ -108,14 +108,12 @@ class WebParser():
 					line_headers[line] = "Trackers: "
 
 			line += 1
+			line_headers += [""]
 			for key, value in content.iteritems():
 				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
 					status += ([value])
 					status_headers += ([key[3:].encode('utf-8')])
-					try:
-						line_headers[line] =  "IRC Servers: "
-					except:
-						line_headers += "IRC Servers: "
+					line_headers[line] =  "IRC Servers: "
 
 		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
 	

@@ -17,6 +17,10 @@ import re
 btnIRCID = "CableGuy"
 btnIRCAnnounce = "Barney"
 
+announcers = ("IRCTorrentAnnouncer",btnIRCAnnounce)
+IRCIDs = ("IRCUserIdentifier",btnIRCID)
+trackerProtocols = ( "HTTP", "HTTPS" )
+
 class WebParser():
 	"""Contains functions for getting and parsing web data"""
 
@@ -56,76 +60,55 @@ class WebParser():
 			# Trackers: IP[s], HTTP, HTTPS
 			# IRC: hostname[s]
 			line_headers = ["Services: "]
-			try:
+
+			if "Website" in content:
 				status = ([content["Website"]])
 				status_headers = [site_name +" Site"]
 				breakpoints[line] += 1
-			except:
-				pass
-			try:
+
+			if "ImageHost" in content:
 				status += [content["ImageHost"]]
 				status_headers += ["Image Host"]
 				breakpoints[line] += 1
-			except:
-				pass
+
 			line += 1
 			line_headers += [""]
 			breakpoints = breakpoints + ([""])
 			breakpoints[line] = breakpoints[line - 1]
-			try:
-				status += [content["IRCTorrentAnnouncer"]]
-				status_headers += ["IRC Announce"]
-				breakpoints[line] += 1
-				line_headers[line] = "IRC Services: "
-			except:
-				pass
-			try:
-				status += [content[btnIRCAnnounce]]
-				status_headers += ["IRC Announce"]
-				breakpoints[line] += 1
-				line_headers[line] = "IRC Services: "
-			except:
-				pass
-			try:
-				status += [content["IRCUserIdentifier"]]
-				status_headers += ["IRC ID"]
-				breakpoints[line] += 1
-				line_headers[line] = "IRC Services: "
-			except:
-				pass
-			try:
-				status += [content[btnIRCID]]
-				status_headers += ["IRC ID"]
-				breakpoints[line] += 1
-				line_headers[line] = "IRC Services: "
-			except:
-				pass
+
+			for announcer in announcers:
+				if announcer in content:
+					status += [content[announcer]]
+					status_headers += ["IRC Announce"]
+					breakpoints[line] += 1
+					line_headers[line] = "IRC Services: "
+
+			for IRCID in IRCIDs:
+				if IRCID in content:
+					status += [content[IRCID]]
+					status_headers += ["IRC ID"]
+					breakpoints[line] += 1
+					line_headers[line] = "IRC Services: "
+
 			line += 1
 			line_headers += [""]
 			breakpoints = breakpoints + ([""])
 			breakpoints[line] = breakpoints[line - 1]
-			try:
+
+			if "TrackerHTTPAddresses" in content:
 				for IP in content["TrackerHTTPAddresses"]:
 					status += ([content["TrackerHTTPAddresses"][IP]])
 					status_headers += ([IP.encode('utf-8')])
 					breakpoints[line] += 1
 				line_headers[line] = "Trackers: "
-			except:
-				pass
-			try:
-				status += ([content["TrackerHTTP"]])
-				status_headers += (["Tracker (HTTP)"])
-				breakpoints[line] += 1
-				line_headers[line] = "Trackers: "
-			except:
-				pass
-			try:
-				status += ([content["TrackerHTTPS"]])
-				status_headers += (["Tracker (HTTPS)"])
-				breakpoints[line] += 1
-				line_headers[line] = "Trackers: "
-			except:
-				pass
+
+			for protocol in trackerProtocols:
+				if "Tracker"+protocol in content:
+					status += [content["Tracker"+protocol]]
+					status_headers += ["Tracker (" + protocol + ")"]
+					breakpoints[line] += 1
+					line_headers[line] = "Trackers: "
+
 			line += 1
 			for key, value in content.iteritems():
 				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
@@ -135,11 +118,7 @@ class WebParser():
 						line_headers[line] =  "IRC Servers: "
 					except:
 						line_headers += "IRC Servers: "
-			#		try:
-			#			breakpoints[line] += 1
-			#		except:
-			#			breakpoints = breakpoints + ([""])
-			#			breakpoints[line] = breakpoints[line -1]+1
+
 		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
 	
 		for i in range(0, len(outStr)):

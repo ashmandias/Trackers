@@ -14,6 +14,9 @@ import json
 import sys
 import re
 
+btnIRCID = "CableGuy"
+btnIRCAnnounce = "Barney"
+
 class WebParser():
 	"""Contains functions for getting and parsing web data"""
 
@@ -48,22 +51,14 @@ class WebParser():
 			breakpoints = [0]	
 		else:
 			breakpoints = [0]
+			# Services: Website, ImageHost
+			# IRC Services: Announce, ID
+			# Trackers: IP[s], HTTP, HTTPS
+			# IRC: hostname[s]
 			line_headers = ["Services: "]
 			try:
 				status = ([content["Website"]])
 				status_headers = [site_name +" Site"]
-				breakpoints[line] += 1
-			except:
-				pass
-			try:
-				status += [content["IRCTorrentAnnouncer"]]
-				status_headers += ["IRC Announce"]
-				breakpoints[line] += 1
-			except:
-				pass
-			try:
-				status += [content["IRCUserIdentifier"]]
-				status_headers += ["IRC ID"]
 				breakpoints[line] += 1
 			except:
 				pass
@@ -78,8 +73,39 @@ class WebParser():
 			breakpoints = breakpoints + ([""])
 			breakpoints[line] = breakpoints[line - 1]
 			try:
+				status += [content["IRCTorrentAnnouncer"]]
+				status_headers += ["IRC Announce"]
+				breakpoints[line] += 1
+				line_headers[line] = "IRC Services: "
+			except:
+				pass
+			try:
+				status += [content[btnIRCAnnounce]]
+				status_headers += ["IRC Announce"]
+				breakpoints[line] += 1
+				line_headers[line] = "IRC Services: "
+			except:
+				pass
+			try:
+				status += [content["IRCUserIdentifier"]]
+				status_headers += ["IRC ID"]
+				breakpoints[line] += 1
+				line_headers[line] = "IRC Services: "
+			except:
+				pass
+			try:
+				status += [content[btnIRCID]]
+				status_headers += ["IRC ID"]
+				breakpoints[line] += 1
+				line_headers[line] = "IRC Services: "
+			except:
+				pass
+			line += 1
+			line_headers += [""]
+			breakpoints = breakpoints + ([""])
+			breakpoints[line] = breakpoints[line - 1]
+			try:
 				for IP in content["TrackerHTTPAddresses"]:
-					print(IP)
 					status += ([content["TrackerHTTPAddresses"][IP]])
 					status_headers += ([IP.encode('utf-8')])
 					breakpoints[line] += 1
@@ -101,20 +127,19 @@ class WebParser():
 			except:
 				pass
 			line += 1
-			print(breakpoints)
 			for key, value in content.iteritems():
 				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
 					status += ([value])
 					status_headers += ([key[3:].encode('utf-8')])
 					try:
-						line_headers[line] =  "IRC: "
+						line_headers[line] =  "IRC Servers: "
 					except:
-						line_headers += "IRC: "
-					try:
-						breakpoints[line] += 1
-					except:
-						breakpoints = breakpoints + ([""])
-						breakpoints[line] = breakpoints[line -1]+1
+						line_headers += "IRC Servers: "
+			#		try:
+			#			breakpoints[line] += 1
+			#		except:
+			#			breakpoints = breakpoints + ([""])
+			#			breakpoints[line] = breakpoints[line -1]+1
 		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
 	
 		for i in range(0, len(outStr)):
@@ -139,7 +164,6 @@ class WebParser():
 		outStr = [line_headers[0]]
 		count = 0
 		line = 0
-		print("len=" + str(len(status)))
 		for element in status:
 			count = count + 1
 			i = int(element)

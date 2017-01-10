@@ -37,21 +37,19 @@ class WebParser():
 		if all != "all":
 			status = [content["Website"], content["TrackerHTTP"], content["IRC"]]
 			status_headers = [site_name+" Site","Tracker","IRC"]
-			try:
+
+			if "IRCTorrentAnnouncer" in content:
 				status += [content["IRCTorrentAnnouncer"]]
 				status_headers += ["IRC Announce"]
-			except:
-				pass
-			try:
+
+			if "IRCUserIdentifier" in content:
 				status += [content["IRCUserIdentifier"]]
 				status_headers += ["IRC ID"]
-			except:
-				pass
-			try:
+
+			if "ImageHost" in content:
 				status += [content["ImageHost"]]
 				status_headers += ["Image Host"]
-			except:
-				pass
+
 			breakpoints = [0]	
 		else:
 			breakpoints = [0]

@@ -1,8 +1,9 @@
-
 # -*- coding: utf-8 -*-
-
 ###
-# by liriel
+# Copyright (c) 2016-2017 Ormanya
+# All rights reserved.
+#
+#
 ###
 
 import supybot.plugins as plugins
@@ -14,119 +15,8 @@ import json
 import sys
 import re
 
-btnIRCID = "CableGuy"
-btnIRCAnnounce = "Barney"
-
-announcers = ("IRCTorrentAnnouncer",btnIRCAnnounce)
-IRCIDs = ("IRCUserIdentifier",btnIRCID)
-trackerProtocols = ( "HTTP", "HTTPS" )
-
 class WebParser():
 	"""Contains functions for getting and parsing web data"""
-
-	def _getStatus(self, irc, site, site_name, all):
-		"""
-		"""
-		site_name = site.upper()
-		url = "https://" + site + ".trackerstatus.info/api/status/"
-
-		content = WebParser().getWebData(irc,url)
-		line = 0
-		line_headers = [""]
-
-		if all != "all":
-			status = [content["Website"], content["TrackerHTTP"], content["IRC"]]
-			status_headers = [site_name+" Site","Tracker","IRC"]
-
-			if "IRCTorrentAnnouncer" in content:
-				status += [content["IRCTorrentAnnouncer"]]
-				status_headers += ["IRC Announce"]
-
-			if "IRCUserIdentifier" in content:
-				status += [content["IRCUserIdentifier"]]
-				status_headers += ["IRC ID"]
-
-			if "ImageHost" in content:
-				status += [content["ImageHost"]]
-				status_headers += ["Image Host"]
-
-			breakpoints = [0]	
-		else:
-			breakpoints = [0]
-			# Services: Website, ImageHost
-			# IRC Services: Announce, ID
-			# Trackers: IP[s], HTTP, HTTPS
-			# IRC: hostname[s]
-			line_headers = ["Services: "]
-
-			if "Website" in content:
-				status = ([content["Website"]])
-				status_headers = [site_name +" Site"]
-				breakpoints[line] += 1
-
-			if "ImageHost" in content:
-				status += [content["ImageHost"]]
-				status_headers += ["Image Host"]
-				breakpoints[line] += 1
-
-			line += 1
-			line_headers += [""]
-			breakpoints = breakpoints + ([""])
-			breakpoints[line] = breakpoints[line - 1]
-
-			if "TrackerHTTPAddresses" in content:
-				for IP in content["TrackerHTTPAddresses"]:
-					status += ([content["TrackerHTTPAddresses"][IP]])
-					status_headers += ([IP.encode('utf-8')])
-					breakpoints[line] += 1
-				line_headers[line] = "Trackers: "
-
-			for protocol in trackerProtocols:
-				if "Tracker"+protocol in content:
-					status += [content["Tracker"+protocol]]
-					status_headers += ["Tracker (" + protocol + ")"]
-					breakpoints[line] += 1
-					line_headers[line] = "Trackers: "
-				line_headers[line] = "Trackers: "
-
-#			print(WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers))
-
-			for key, value in content.iteritems():
-				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
-					status += ([value])
-					status_headers += ([key[3:].encode('utf-8')])
-					if not line_headers[line] ==  "IRC Servers: ":
-						line += 1
-						line_headers += [""]
-						breakpoints = breakpoints + ([""])
-						breakpoints[line] = breakpoints[line - 1]
-						line_headers[line] =  "IRC Servers: "
-					breakpoints[line] += 1
-
-			line += 1
-			line_headers += [""]
-			breakpoints = breakpoints + ([""])
-			breakpoints[line] = breakpoints[line - 1]
-
-			for announcer in announcers:
-				if announcer in content:
-					status += [content[announcer]]
-					status_headers += ["IRC Announce"]
-					breakpoints[line] += 1
-					line_headers[line] = "IRC Services: "
-
-			for IRCID in IRCIDs:
-				if IRCID in content:
-					status += [content[IRCID]]
-					status_headers += ["IRC ID"]
-					breakpoints[line] += 1
-					line_headers[line] = "IRC Services: "
-
-
-		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
-	
-		for i in range(0, len(outStr)):
-			irc.reply(outStr[i], prefixNick=False)
 
 	def getWebData(self, irc, url):
 		headers = {'User-Agent' : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'}
@@ -151,21 +41,16 @@ class WebParser():
 			count = count + 1
 			i = int(element)
 
-			outStr[line] = str(outStr[line])+status_colours[i]+status_symbols[i]+" "+status_headers[count - 1 ]+" "+status_states[i]
+			outStr[line] = outStr[line]+status_colours[i]+status_symbols[i]+" "+status_headers[count - 1 ]+" "+status_states[i]
 
 			# Split output at breakpoints
 			if count in breakpoints:
-				try:
-					line = line + 1
-					outStr.extend([line_headers[line]])
-				except:
-					pass
+				line = line + 1
+				outStr.extend([line_headers[line]])
 			# don't append "|" if end of line	
 			elif count != len(status):
 				outStr[line] = outStr[line]+chr(15)+" | "                  
 		return outStr
-
-
 
 class Trackers(callbacks.Plugin):
 	"""Contains commands for checking server status of various trackers."""
@@ -194,8 +79,8 @@ class Trackers(callbacks.Plugin):
 			line_headers = [""]
 
 		else:
-			status = [content["Website"], content["IRC"], content["TrackerHTTP"], content["TrackerHTTPS"], content["CableGuy"], content["Barney"]]
-			status_headers = ["Site","IRC","Tracker","Tracker SSL","IRC Id","IRC Announce"]
+			status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["CableGuy"], content["Barney"]]
+			status_headers = ["Site","Tracker","Tracker SSL","IRC","IRC Id","IRC Announce"]
 			breakpoints = [0]
 			line_headers = [""]
 
@@ -206,17 +91,17 @@ class Trackers(callbacks.Plugin):
 
 	btn = wrap(btnStatus, [optional("something")])
 
-	def pthStatus(self, irc, msg, args, all):
+	def redStatus(self, irc, msg, args, all):
 		"""
-		Check the status of What.cd site, tracker, and irc.
+		Check the status of RED site, tracker, and irc.
 		"""
-		url = "http://pth.trackerstatus.info/api/status/"
-		site_name = "PTH"
+		url = "http://red.trackerstatus.info/api/status/"
+		site_name = "RED"
 
 		content = WebParser().getWebData(irc,url)
 
-		status = [content["Website"], content["IRC"], content["TrackerHTTP"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
-		status_headers = [site_name+" Site","IRC","Tracker","IRC Announce","IRC ID"]
+		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
+		status_headers = [site_name+" Site","Tracker","Tracker SSL","IRC","IRC Announce","IRC ID"]
 		breakpoints = [0]
 		line_headers = [""]
 
@@ -225,7 +110,50 @@ class Trackers(callbacks.Plugin):
 		for i in range(0, len(outStr)):
 			irc.reply(outStr[i])
 
-	pth = wrap(pthStatus, [optional("something")])
+	red = wrap(redStatus, [optional("something")])
+
+	def mtvStatus(self, irc, msg, args, all):
+		"""
+		Check the status of MTV site, tracker, and irc.
+		"""
+		url = "http://mtv.trackerstatus.info/api/status/"
+		site_name = "MTV"
+
+		content = WebParser().getWebData(irc,url)
+
+		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
+		status_headers = [site_name+" Site","Tracker","Tracker SSL","IRC","IRC Announce","IRC ID"]
+		breakpoints = [0]
+		line_headers = [""]
+
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+
+	mtv = wrap(mtvStatus, [optional("something")])
+
+	def nwcdStatus(self, irc, msg, args, all):
+		"""
+		Check the status of NWCD site, tracker, and irc.
+		"""
+		url = "http://nwcd.trackerstatus.info/api/status/"
+		site_name = "NWCD"
+
+		content = WebParser().getWebData(irc,url)
+
+		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]]
+		status_headers = [site_name+" Site","Tracker","Tracker SSL","IRC","IRC Announce","IRC ID","Image Host"]
+		breakpoints = [0]
+		line_headers = [""]
+
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+
+	nwcd = wrap(nwcdStatus, [optional("something")])
+
 
 	def ptpStatus(self, irc, msg, args, all):
 		"""
@@ -235,28 +163,23 @@ class Trackers(callbacks.Plugin):
 		site_name = "PTP"
 
 		content = WebParser().getWebData(irc,url)
-
+	
 		if all != "all":
 			status = [content["Website"], content["TrackerHTTP"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]]
 			status_headers = [site_name+" Site","Tracker","IRC","IRC Announce","IRC ID","Image Host"]
 			breakpoints = [0]	
 			line_headers = [""]	
 		else:
-			status = ([content["Website"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]])
-			for IP in content["TrackerHTTPAddresses"]:
-				status += ([content["TrackerHTTPAddresses"][IP]])
-			for key, value in content.iteritems():
-				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
-					status += ([value])
-			status_headers = ([site_name+" Site","IRC Announce","IRC ID","Image Host"])
-			for IP in content["TrackerHTTPAddresses"]:
-				status_headers += ([IP.encode('utf-8')])
-			for key, value in content.iteritems():
-				if key.startswith('IRC') and (key != 'IRCUserIdentifier' and key != 'IRCTorrentAnnouncer' and key != 'IRC'):
-					status_headers += ([key[3:].encode('utf-8')])
+			status = ([content["Website"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"], 
+				     content["TrackerHTTPAddresses"]["51.255.35.82"],
+				     content["TrackerHTTPAddresses"]["164.132.54.181"],content["TrackerHTTPAddresses"]["164.132.54.182"],content["TrackerHTTPAddresses"]["192.99.58.220"],
+				     content["IRCPersona"], content["IRCPalme"], content["IRCSaraband"]])
+			status_headers = ([site_name+" Site","IRC Announce","IRC ID","Image Host",
+							 "51.255.35.82","164.132.54.181","164.132.54.182","192.99.58.220",
+							 "Persona","Palme","Saraband"])
 			breakpoints = [4,8]
 			line_headers = ["Services: ", "Trackers: ", "IRC: "]
-	
+
 		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
 
 		for i in range(0, len(outStr)):
@@ -266,15 +189,15 @@ class Trackers(callbacks.Plugin):
 
 	def ggnStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTP site, tracker, and irc.
+		Check the status of GGN site, tracker, and irc.
 		"""
 		url = "https://ggn.trackerstatus.info/api/status/"
 		site_name = "GGn"
 
 		content = WebParser().getWebData(irc,url)
 	
-		status = [content["Website"], content["TrackerHTTP"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]]
-		status_headers = [site_name+" Site","Tracker","IRC","IRC Announce","IRC ID","Image Host"]
+		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]]
+		status_headers = [site_name+" Site","Tracker","TrackerSSL","IRC","IRC Announce","IRC ID","Image Host"]
 		breakpoints = [0]	
 		line_headers = [""]	
 
@@ -285,51 +208,103 @@ class Trackers(callbacks.Plugin):
 
 	ggn = wrap(ggnStatus, [optional("something")])
 
-	def ggnStatusTest(self, irc, msg, args, all):
+	def arStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTP site, tracker, and irc.
+		Check the status of AR site, tracker, and irc.
 		"""
-		site_name = "GGn"
-		site = "ggn"
+		url = "http://ar.trackerstatus.info/api/status/"
+		site_name = "AR"
 
-		WebParser()._getStatus(irc, site, site_name, all)
+		content = WebParser().getWebData(irc,url)
 
-	ggntest = wrap(ggnStatusTest, [optional("something")])
+		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
+		status_headers = [site_name+" Site","Tracker","Tracker SSL","IRC","IRC Announce","IRC ID"]
+		breakpoints = [0]
+		line_headers = [""]
 
-	def ptpStatusTest(self, irc, msg, args, all):
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+
+	ar = wrap(arStatus, [optional("something")])
+
+	def ahdStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTP site, tracker, and irc.
+		Check the status of AHD site, tracker, and irc.
 		"""
-		site_name = "PTP"
-		site = "ptp"
 
-		WebParser()._getStatus(irc, site, site_name, all)
+		# This function is different than the others because it scrapes HTML rather than use an api site
+		url = "https://status.awesome-hd.me"
+		site_name = "AHD"
 
-	ptptest = wrap(ptpStatusTest, [optional("something")])
+        # Get web page content
+		headers = {'User-Agent' : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'}
+		try:
+			content = requests.get(url, headers=headers)
+		except:
+			irc.reply("Error: Couldn't connect to "+url)
+			sys.exit()
 
-	def btnStatusTest(self, irc, msg, args, all):
+		# Extract statuses
+		status_txt = re.search(r'.*Site.*2x\ (.*)".*\n.*2x\ (.*)".*\n.*2x\ (.*)"', content.text)
+		print status_txt
+		status = []
+		for i in range(0,4):
+			if status_txt.group(i) == "green":
+				status.append(1)
+			else:
+				status.append(0)
+
+		status = [status[1],status[2],status[3]]
+		status_headers = [site_name+" Site","IRC","Tracker"]
+		breakpoints = [0]
+		line_headers = [""]
+
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+
+	ahd = wrap(ahdStatus, [optional("something")])
+
+	def abStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTP site, tracker, and irc.
+		Check the status of AB site, tracker, and irc.
 		"""
-		site_name = "BTN"
-		site = "btn"
 
-		WebParser()._getStatus(irc, site, site_name, all)
+		# This function is different than the others because it scrapes HTML rather than use an api site
+		url = "http://status.animebytes.tv"
+		site_name = "AB"
 
-	btntest = wrap(btnStatusTest, [optional("something")])
+        # Get web page content
+		headers = {'User-Agent' : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'}
+		try:
+			content = requests.get(url, headers=headers)
+		except:
+			irc.reply("Error: Couldn't connect to "+url)
+			sys.exit()
 
-	def pthStatusTest(self, irc, msg, args, all):
-		"""
-		Check the status of PTP site, tracker, and irc.
-		"""
-		site_name = "PTH"
-		site = "pth"
+		# Extract statuses
+		status_txt = re.search(r'.*site.*\n.*status (.*)"[\S\s]+tracker.*\n.*status (.*)"[\S\s]+irc.*\n.*status (.*)"', content.text)
+		status = []
+		for i in range(0,4):
+			if status_txt.group(i) == "normal":
+				status.append(1)
+			else:
+				status.append(0)
 
-		WebParser()._getStatus(irc, site, site_name, all)
+		status = [status[1],status[3],status[2]]
+		status_headers = [site_name+" Site","IRC","Tracker"]
+		breakpoints = [0]
+		line_headers = [""]
 
-	pthtest = wrap(pthStatusTest, [optional("something")])
-		
-		
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+
+	ab = wrap(abStatus, [optional("something")])
 
 Class = Trackers
 
